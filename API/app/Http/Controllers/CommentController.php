@@ -13,10 +13,10 @@ class CommentController extends Controller
 {
     public function commentView(Request $req)
     {
-        $postId = decrypt($req->postId);
-        $post = Post::where('id', $postId)->first();
+        $postId = $req->postId;
+        // $post = Post::where('id', $postId)->first();
         $comments = Comment::select('*')->where('fk_posts_id', $postId)->get();
-        return view('comment')->with('comments', $comments)->with('post', $post);
+        return response()->json($comments);
     }
 
     public function commentCreate(Request $req)
@@ -26,13 +26,18 @@ class CommentController extends Controller
                 'comment' => 'required',
             ]
         );
-        $postId = decrypt($req->postId);
+        $postId = $req->postId;
         $c = new Comment();
         $c->text = $req->comment;
         $c->createdAt = Carbon::now();
         $c->fk_users_id = Session::get('id');
+        // $c->fk_users_id = 14;
         $c->fk_posts_id = $postId;
-        $c->save();
+        if($c->save())
+        {
+            return response()->json(['msg' => 'comment created']);
+        }
+        return response()->json(['msg' => 'failed to create comment']);
 
         $notification = new Notification();
         $notification->fk_users_id = $c->post->user->id;
@@ -46,9 +51,9 @@ class CommentController extends Controller
 
     public function commentEdit(Request $req)
     {
-        $commentId = decrypt($req->commentId);
+        $commentId = $req->commentId;
         $comment = Comment::where('id', $commentId)->first();
-        return view('commentEdit')->with('comment', $comment);
+        return response()->json($comment);
     }
 
     public function commentEditSubmit(Request $req)
@@ -58,18 +63,27 @@ class CommentController extends Controller
                 'comment' => 'required',
             ]
         );
-        $commentId = decrypt($req->commentId);
+        $commentId = $req->commentId;
         $c = Comment::where('id', $commentId)->first();
         $c->text = $req->comment;
-        $c->save();
+        if($c->save())
+        {
+            return response()->json(['msg' => 'comment edited']);
+        }
+        return response()->json(['msg' => 'failed to edit comment']);
+        
         $postId = encrypt($c->fk_posts_id);
         return redirect()->route('comment.view', ['postId' =>$postId]);
     }
 
     public function commentDelete(Request $req)
     {
-        $commentId = decrypt($req->commentId);
-        $c = Comment::where('id', $commentId)->delete();
-        return redirect()->back();
+        $commentId = $req->commentId;
+        
+        if(Comment::where('id', $commentId)->delete())
+        {
+            return response()->json(['msg' => 'comment delted']);
+        }
+        return response()->json(['msg' => 'failed to delete comment']);
     }
 }

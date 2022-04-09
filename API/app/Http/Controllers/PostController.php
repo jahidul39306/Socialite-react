@@ -22,21 +22,32 @@ class PostController extends Controller
         $p->createdAt = Carbon::now();
         $p->status = 1;
         $p->fk_users_id = Session::get('id');
-        $p->save();
-        return redirect()->back();
+        // $p->fk_users_id = 14;
+        if($p->save())
+        {
+            return response()->json(['msg' => 'post created']);
+        }
+        return response()->json(['msg' => 'failed to create post']);
+    }
+
+    public function allPosts()
+    {
+        $posts = Post::get();
+        return response()->json($posts);
     }
 
     public function myPosts()
     {
         $posts = Post::where('fk_users_id', Session::get('id'))->get();
-        return view('myPosts')->with('posts', $posts);
+        // $posts = Post::where('fk_users_id', 14)->get();
+        return response()->json($posts);
     }
 
     public function postEdit(Request $req)
     {
-        $postId = decrypt($req->postId);
+        $postId = $req->id;
         $post = Post::where('id', $postId)->first();
-        return view('editPost')->with('post', $post);
+        return response()->json($post);
     }
 
     public function postEditSubmit(Request $req)
@@ -46,17 +57,24 @@ class PostController extends Controller
                 'postData' => 'required',
             ]
         );
-        $postId = decrypt($req->postId);
+        $postId = $req->id;
         $p = Post::where('id', $postId)->first();
         $p->postText = $req->postData;
-        $p->save();
-        return redirect()->route('home');
+        if($p->save())
+        {
+            return response()->json(['msg' => 'post edited']);
+        }
+        return response()->json(['msg' => 'failed to edit post']);
     }
 
     public function postDelete(Request $req)
     {
-        $postId = decrypt($req->postId);
-        $p = Post::where('id', $postId)->delete();
-        return redirect()->back();
+        $postId = $req->id;
+        
+        if($p = Post::where('id', $postId)->delete())
+        {
+            return response()->json(['msg' => 'post delted']);
+        }
+        return response()->json(['msg' => 'failed to delete post']);
     }
 }

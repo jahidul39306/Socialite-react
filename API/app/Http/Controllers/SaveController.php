@@ -12,22 +12,33 @@ class SaveController extends Controller
 {
     public function saveCreate(Request $req)
     {
-        $postId = decrypt($req->postId); 
+        
+        $postId = $req->postId; 
         $fav = Save::select('*')->where(
             [
                 ['fk_posts_id', '=', $postId],
                 ['fk_users_id', '=', Session::get('id')]
+                // ['fk_users_id', '=', 14]
             ]
         )->first();
         if($fav != null)
         {
-            $fav->delete();
-            return redirect()->route('home');
+            if($fav->delete())
+            {
+                return response()->json(['msg' => 'save delted']);
+            }
+            return response()->json(['msg' => 'failed to delete save']);
         }
         $fav = new Save();
         $fav->fk_posts_id = $postId;
         $fav->fk_users_id = Session::get('id');
-        $fav->save();
+        // $fav->fk_users_id = 14;
+        
+        if($fav->save())
+        {
+            return response()->json(['msg' => 'save created']);
+        }
+        return response()->json(['msg' => 'failed to create save']);
 
         $notification = new Notification();
         $notification->fk_users_id = $fav->post->user->id;
@@ -41,7 +52,8 @@ class SaveController extends Controller
 
     public function saveShow()
     {
-       $saves = Save::where('fk_users_id', Session::get('id'))->get();
-       return view('savePosts')->with('saves', $saves);
+        // 14
+        $saves = Save::where('fk_users_id', Session::get('id'))->get();
+        return response()->json($saves);
     }
 }
