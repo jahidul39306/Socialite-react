@@ -11,6 +11,6 @@ class NotificationController extends Controller
     public function notificationShow()
     {
         $notifications = Notification::where('fk_users_id', Session::get('id'))->get();
-        return view('notification')->with('notifications', $notifications);
+        return response()->json($notifications);
     }
 }

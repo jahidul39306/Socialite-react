@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//home
+Route::get('/home',[HomeController::class, 'home'])->name('home');
 
 //post
 Route::post('/post/create',[PostController::class, 'postCreate'])->name('post.create');
@@ -51,3 +53,23 @@ Route::get('/comment/delete/{commentId}', [CommentController::class, 'commentDel
 //save
 Route::get('/save/create/{postId}', [SaveController::class, 'saveCreate'])->name('save');
 Route::get('/save/show', [SaveController::class, 'saveShow'])->name('save.show');
+
+//like
+Route::get('/like/create/{postId}', [LikeController::class, 'likeCreate'])->name('like');
+
+//follower
+Route::get('/follower/create/{userId}',[FollowerController::class,'followerCreate'])->name('follower.create');
+Route::get('/follower/show',[FollowerController::class,'followerShow'])->name('follower.show');
+Route::get('/following/show',[FollowerController::class,'followingShow'])->name('following.show');
+
+//notification
+Route::get('/notification',[NotificationController::class,'notificationShow'])->name('notification.show');
+
+//admin
+//user
+Route::get('/changestatus/{userId}',[UserController::class,'changeStatus'])->name('user.changeStatus');
+
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/admin/users', [AdminController::class, 'usersInfo'])->name('admin.users');
+Route::get('/admin/comments', [AdminController::class, 'postsInfo'])->name('admin.posts');
+Route::get('/admin/likes', [AdminController::class, 'commentsInfo'])->name('admin.comments');

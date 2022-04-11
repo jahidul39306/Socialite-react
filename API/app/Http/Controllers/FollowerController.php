@@ -10,23 +10,32 @@ class FollowerController extends Controller
 {
     public function followerCreate(Request $req)
     {
-        $userId = decrypt($req->userId);
+        $userId = $req->userId;
         $result = Follower::select('*')->where([
-            ['fk_follower_users_id', '=', Session::get('id')],
+            // ['fk_follower_users_id', '=', Session::get('id')],
+            ['fk_follower_users_id', '=', 15],
             ['fk_users_id', '=', $userId]
         ])->first();
 
         if($result != null)
         {
-            $result->delete();
-            return redirect()->back();
+            if($result->delete())
+            {
+                return response()->json(['msg' => 'follower delted']);
+            }
+            return response()->json(['msg' => 'failed to delete follower']);
         }
 
         $result = new Follower();
-        $result->fk_follower_users_id = Session::get('id');
+        // $result->fk_follower_users_id = Session::get('id');
+        $result->fk_follower_users_id = 15;
         $result->fk_users_id = $userId;
-        $result->save();
-        return redirect()->back();
+        
+        if($result->save())
+        {
+            return response()->json(['msg' => 'follower created']);
+        }
+        return response()->json(['msg' => 'failed to create follower']);
     }
 
     public function checkFollowing(Request $req)
@@ -42,12 +51,12 @@ class FollowerController extends Controller
     public function followerShow()
     {
         $followers = Follower::where('fk_users_id', Session::get('id'))->get();
-        return view('followerShow')->with('followers', $followers);
+        return response()->json($followers);
     }
 
     public function followingShow()
     {
         $followings = Follower::where('fk_follower_users_id', Session::get('id'))->get();
-        return view('followingShow')->with('followings', $followings);
+        return response()->json($followings);
     }
 }

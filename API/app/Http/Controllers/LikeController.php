@@ -12,22 +12,31 @@ class LikeController extends Controller
 {
     public function likeCreate(Request $req)
     {
-        $postId = decrypt($req->postId); 
+        $postId = $req->postId; 
         $like = Like::select('*')->where(
             [
                 ['fk_posts_id', '=', $postId],
                 ['fk_users_id', '=', Session::get('id')]
+                // ['fk_users_id', '=', 14]
             ]
         )->first();
         if($like != null)
         {
-            $like->delete();
-            return redirect()->back();
+            if($like->delete())
+            {
+                return response()->json(['msg' => 'like delted']);
+            }
+            return response()->json(['msg' => 'failed to delete like']);
         }
         $like = new Like();
         $like->fk_posts_id = $postId;
         $like->fk_users_id = Session::get('id');
-        $like->save();
+        // $like->fk_users_id = 14;
+        if($like->save())
+        {
+            return response()->json(['msg' => 'like created']);
+        }
+        return response()->json(['msg' => 'failed to create like']);
 
         $notification = new Notification();
         $notification->fk_users_id = $like->post->user->id;

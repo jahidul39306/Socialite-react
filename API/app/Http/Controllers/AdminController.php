@@ -17,24 +17,24 @@ class AdminController extends Controller
             'totalLikes' => Like::select('id')->get()->count(),
             'totalComments' => Comment::select('id')->get()->count(),
         ]; 
-        return view('Admin.dashboard')->with('info', (object)$info);
+        return response()->json($info);
     }
 
     public function usersInfo()
     {
         $users = User::select('*')->get();
-        return view('Admin.adminUsers')->with('users', $users);
+        return response()->json($users);
     }
 
     public function postsInfo()
     {
         $posts = Post::select('*')->get();
-        return view('Admin.adminPosts')->with('posts', $posts);
+        return response()->json($posts);
     }
 
     public function commentsInfo()
     {
         $comments = Comment::select('*')->get();
-        return view('Admin.adminComments')->with('comments', $comments);
+        return response()->json($comments);
     }
 }

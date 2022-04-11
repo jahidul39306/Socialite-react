@@ -31,6 +31,6 @@ class HomeController extends Controller
         // $data = (object)$data;
         // print_r($posts);die();
         
-        return view('home')->with('posts', $posts);
+        return response()->json($posts);
     }
 }
