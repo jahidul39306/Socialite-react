@@ -16,6 +16,8 @@ use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\PagesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,9 +67,36 @@ Route::get('/following/show',[FollowerController::class,'followingShow'])->name(
 //notification
 Route::get('/notification',[NotificationController::class,'notificationShow'])->name('notification.show');
 
+//Profile
+    Route::get('/profile/{id}',[ProfileController::class,'getProfileData'])->name('profile');
+//edit profile 
+    Route::get('/editProfile/{id}',[ProfileController::class,'editProfileData'])->name('editProfile');
+    Route::post('/editProfile/{id}',[ProfileController::class,'editProfileDataSubmit'])->name('editProfileSubmit');
+
+//work Profile
+    Route::get('/workProfile/{id}',[ProfileController::class, 'getWorkProfile'])->name('workProfile');
+    Route::post('/addWorkProfile/{id}',[ProfileController::class,'addWorkProfileSubmit'])->name('addWorkProfileSubmit');
+    Route::post('/deleteWorkProfile/{id}',[ProfileController::class,'deleteWorkProfile'])->name('deleteWorkProfile');
+    Route::get('/editWorkProfile/{w_id}',[ProfileController::class,'editWorkProfile'])->name('editWorkProfile');
+    Route::post('/editWorkProfile/{w_id}',[ProfileController::class,'editWorkProfileSubmit'])->name('editWorkProfileSubmit');
+//Report generate
+    Route::get('/invoice/{id}',[ProfileController::class,'invoice'])->name('invoice');
+//graph 
+    Route::get('/graph/{id}',[ProfileController::class,'graph'])->name('graph');
+//Change Password
+    Route::post('/changePassword/{id}',[ChangePasswordController::class,'changePassword'])->name('changePassword');
+//Page
+    Route::post('/createPage/{id}',[PagesController::class,'create'])->name('createPage');
+    Route::post('/deletePage/{p_id}',[PagesController::class,'delete'])->name('deletePage');
+    Route::get('/editPage/{p_id}',[PagesController::class,'edit'])->name('editPage');
+    Route::post('/editPage/{p_id}',[PagesController::class,'editSubmit'])->name('editPageSubmit');
+
+
 //admin
 //user
 Route::get('/changestatus/{userId}',[UserController::class,'changeStatus'])->name('user.changeStatus');
+
+
 
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 Route::get('/admin/users', [AdminController::class, 'usersInfo'])->name('admin.users');
