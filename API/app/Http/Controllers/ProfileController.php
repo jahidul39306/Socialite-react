@@ -14,9 +14,9 @@ use App\Models\Follower;
 class ProfileController extends Controller
 {
     
-    public function graph()
+    public function graph(Request $req)
     {
-        $userId=session()->get('id');
+        $userId=$req->id;
         $data="";
         $result=Work_profile::where('fk_users_id','=',$userId)->select('institution','startYear','endYear')->get();
         foreach($result as $a)
@@ -28,37 +28,51 @@ class ProfileController extends Controller
         }
         // dd($data);
         $chartData=$data;
-        return view('Profile.graph',compact('chartData'));
+        
+        return response()->json(["chartData"=>$chartData]);
     }
-    public function invoice()
+    public function invoice(Request $req)
     {
-        $userId=session()->get('id');
+        $userId=$req->id;
         $profileData=Profile::where('fk_users_id','=',$userId)->first();
         $workProfiles=Work_profile::where('fk_users_id','=',$userId)->get();
         $user=User::where('id','=',$userId)->first();
-        // return view('Profile.invoice',compact('workProfiles','user','profileData'));
+        if($user)
+        {
+            $pdf=PDF::loadView('Profile.invoice',compact('workProfiles','user','profileData'));
+        
+            if($pdf->download('invoice.pdf'))
+            {
+                return response()->json(["msg"=>"Invoice download successful"]);
+            }
+            else
+            {
+                return response()->json(["msg"=>"Invoice download successful"]);
+            }
+        }
+        else
+        {
+            return response()->json(["msg"=>"User not found"]);
+        }
 
-        $pdf=PDF::loadView('Profile.invoice',compact('workProfiles','user','profileData'));
-        return $pdf->download('invoice.pdf');
+        
     }
-    public function getWorkProfile()
+    public function getWorkProfile(Request $req)
     {
-        $userId=session()->get('id');
+        //$userId=session()->get('id');
+        $userId=$req->id;
         $profileData=Profile::where('fk_users_id','=',$userId)->first();
         $profileName=User::where('id','=',$userId)->select('name')->first();
 
         $workProfiles=Work_profile::where('fk_users_id','=',$userId)->get();
-        return view('Profile.workProfile')->with('profileData',$profileData)->with('profileName',$profileName)->with('workProfiles',$workProfiles);
-
+        //return view('Profile.workProfile')->with('profileData',$profileData)->with('profileName',$profileName)->with('workProfiles',$workProfiles);
+        return response()->json(["profileData"=>$profileData,"profileName"=>$profileName,"workProfiles"=>$workProfiles]);
     }
-    public function addWorkProfile()
-    {
-        
-        return view('Profile.addWorkProfile');
-    }
+    
     public function addWorkProfileSubmit(Request $req)
     {
-        $userId=session()->get('id');
+        //$userId=session()->get('id');
+        $userId=$req->id;
         $req->validate(
             [
                 'institution'=>'required',
@@ -68,27 +82,41 @@ class ProfileController extends Controller
 
             ]
             );
+        
         $workProfile=new Work_profile();
         $workProfile->institution=$req->institution;
         $workProfile->startYear=$req->startYear;
         $workProfile->endYear=$req->endYear;
         $workProfile->position=$req->position;
         $workProfile->fk_users_id=$userId;
-        $workProfile->save();
-        return redirect()->route('workProfile');
+        
+        if($workProfile->save())
+        {
+            return response()->json(["msg"=>"Work Profile added"]);
+        }
+        else
+        {
+            return response()->json(["msg"=>"Work Profile added failed"]);
+        }
 
     }
 
-    public function deleteWorkProfile($id)
+    public function deleteWorkProfile(Request $req)
     {
-        $delete=Work_profile::where('id','=',$id)->delete();
-        return redirect()->route('workProfile');
+        $delete=Work_profile::where('id','=',$req->id)->delete();
+        if($delete)
+        {
+            return response()->json(["msg"=>"Work Profile delete successful"]);
+        }
+        else
+        {
+            return response()->json(["msg"=>"Work Profile delete failed"]);
+        }
     }
-
-    public function editWorkProfile($id)
+    public function editWorkProfile(Request $req)
     {
-        $workProfile=Work_profile::where('id','=',decrypt($id))->first();
-        return view('Profile.editWorkProfile')->with('wp',$workProfile);
+        $workProfile=Work_profile::where('id','=',$req->w_id)->first();
+        return response()->json(["workProfile"=>$workProfile]);
     }
     public function editWorkProfileSubmit(Request $req)
     {
@@ -106,36 +134,42 @@ class ProfileController extends Controller
         $workProfile->startYear=$req->startYear;
         $workProfile->endYear=$req->endYear;
         $workProfile->position=$req->position;
-        $workProfile->save();
-        return redirect()->route('workProfile');
-    }
-    public function editProfileData()
-    {
-        if(session()->has('id'))
+        
+        if($workProfile->save())
         {
-            $userId=session()->get('id');
-            $profileData=Profile::where('fk_users_id','=',$userId)->first();
-            
-            $profileName=User::where('id','=',$userId)->select('name')->first();
-            // return  $profileName;
-            return view('Profile.editProfile')->with('profileData',$profileData)->with('profileName',$profileName);
+            return response()->json(["msg"=>"Work Profile update successful"]);
         }
+        else
+        {
+            return response()->json(["msg"=>"Work Profile update failed"]);
+        }
+        
+    }
+    public function editProfileData(Request $req)
+    {
+            $userId=$req->id;
+            $profileData=Profile::where('fk_users_id','=',$userId)->first();
+            $profileName=User::where('id','=',$userId)->select('name')->first();
+            return response()->json(["profileData"=>$profileData,"profileName"=>$profileName]);
     }
     public function editProfileDataSubmit(Request $req)
     {
-        $userId=session()->get('id');
+        //$userId=session()->get('id');
+        //without session
+        $userId=$req->id;
         
         $req->validate(
             [
-                'name'=>'required | regex: /^[A-Z a-z]+$/',
+                'name'=>'required|regex: /^[A-Z a-z]+$/',
                 'address'=>'required',
                 'dob'=>'required',
                 'gender'=>'required',
                 'religion'=>'required',
                 'relationship'=>'required',
-                'profileImage'=>'mimes:jpg,png',
+                
             ]
             );
+        
         $profile=Profile::where('fk_users_id','=',$userId)->first();
         $user=User::where('id','=',$userId)->first();
         if($req->file('profileImage')=='')
@@ -147,9 +181,18 @@ class ProfileController extends Controller
             $profile->religion=$req->religion;
             $profile->relationship=$req->relationship;
             $profile->fk_users_id=$userId;
-            $profile->save();
+            //$profile->save();
             $user->name=$req->name;
-            $user->save();
+            //$user->save();
+
+            if($profile->save() && $user->save())
+            {
+                return response()->json(["msg"=>"Profile Updated"]);
+            }
+            else
+            {
+                return response()->json(["msg"=>"Profile Updated failed"]);
+            }
             
         }
         else{
@@ -163,29 +206,36 @@ class ProfileController extends Controller
             $profile->relationship=$req->relationship;
             $profile->profileImage="storage/images/".$filename;
             $profile->fk_users_id=$userId;
-            $profile->save();
+            //$profile->save();
             $user->name=$req->name;
-            $user->save();
+            // $user->save();
+            if($profile->save() && $user->save())
+            {
+                return response()->json(["msg"=>"Profile Updated"]);
+            }
+            else
+            {
+                return response()->json(["msg"=>"Profile Updated failed"]);
+            }
         }
         
-        Session::flash('message', 'Profile upload successful');
-        return redirect()->route('profile');
+        // Session::flash('message', 'Profile upload successful');
+        // return redirect()->route('profile');
     }
-
  
-    public function getProfileData()
+    public function getProfileData(Request $req)
     {
-        if(session()->has('id'))
-        {
-            $userId=session()->get('id');
+        
+        //without session
+            $userId=$req->id;
             $profileData=Profile::where('fk_users_id','=',$userId)->first();
             $profileName=User::where('id','=',$userId)->select('name')->first();
             
             //return $profileData->profileImage;
-            return view('Profile.profile')->with('profileData',$profileData)->with('profileName',$profileName);
-        }
-        // else
-        // return failed;
+            return response()->json(["profileData"=>$profileData,"profileName"=>$profileName]);
+            
+        
+        
     }
 
     public function getProfileByID(Request $req)
