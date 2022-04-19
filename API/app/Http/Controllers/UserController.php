@@ -9,8 +9,8 @@ class UserController extends Controller
 {
     public function changeStatus(Request $req)
     {
-        // $userId = $req->userId;
-        $userId = 15;
+        $userId = $req->userId;
+        //$userId = 15;
         $user = User::where('id', $userId)->first();
         if($user->status == 0)
         {
@@ -27,5 +27,17 @@ class UserController extends Controller
             return response()->json(['msg' => 'user blocked']);
         }
         return response()->json(['msg' => 'failed to change status']);
+    }
+
+    public function verifyMail(Request $req)
+    {
+        $userId = $req->userId;
+        $user = User::where('id', $userId)->first();
+        $user->emailVerified = 1;
+        if($user->save())
+        {
+            return "<p>Email verification successful</p>";
+        }
+        return "<p>Email verification failed</p>";
     }
 }

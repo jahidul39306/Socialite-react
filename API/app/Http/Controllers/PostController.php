@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 
@@ -21,7 +22,7 @@ class PostController extends Controller
         $p->postText = $req->postData;
         $p->createdAt = Carbon::now();
         $p->status = 1;
-        $p->fk_users_id = Session::get('id');
+        $p->fk_users_id = $req->id;
         // $p->fk_users_id = 14;
         if($p->save())
         {
@@ -33,13 +34,28 @@ class PostController extends Controller
     public function allPosts()
     {
         $posts = Post::get();
-        return response()->json($posts);
+        $data = [];
+        foreach($posts as $post)
+        {
+            $temp = [
+               "id" => $post->id,
+               "postText" => $post->postText,
+               "createdAt" => $post->createdAt,
+               "status" => $post->status,
+               "fk_users_id" => $post->fk_users_id,
+               "postImage" => null,
+               "userName" => $post->user->name,
+            ];
+            array_push($data, $temp);
+        }
+        return response()->json($data);
     }
 
     public function myPosts()
     {
         $posts = Post::where('fk_users_id', Session::get('id'))->get();
         // $posts = Post::where('fk_users_id', 14)->get();
+   
         return response()->json($posts);
     }
 

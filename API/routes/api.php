@@ -18,6 +18,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\PagesController;
+use App\Http\Controllers\MailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,24 @@ use App\Http\Controllers\PagesController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+//registration
+Route::post('/registration/submit',[RegistrationController::class, 'registrationSubmit'])->name('registration.submit');
+
+//registration google
+Route::get('/registration/google',[RegistrationController::class, 'registrationGoogle'])->name('registration.google');
+Route::get('/registration/google/submit',[RegistrationController::class, 'registrationGoogleSubmit'])->name('registration.google.submit');
+
+//Login
+Route::post('/login/submit',[LoginController::class, 'loginSubmit'])->name('login.submit');
+
+//login google
+Route::get('/login/google/submit',[LoginController::class, 'loginGoogleSubmit'])->name('login.google.submit');
+
+//Email
+Route::get('/send/mail/{userId}/{email}', [MailController::class, 'sendMail'])->name('send.mail');
+Route::get('/verify/mail/{userId}', [UserController::class, 'verifyMail']);
+
 
 //home
 Route::get('/home',[HomeController::class, 'home'])->name('home');

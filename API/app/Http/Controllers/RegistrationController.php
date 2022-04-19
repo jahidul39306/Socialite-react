@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Work_profile;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\MailController;
 
 class RegistrationController extends Controller
 {
@@ -27,11 +28,16 @@ class RegistrationController extends Controller
         $req->validate(
             [
                 'name' => 'required',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'required|email',
                 'password' => 'required'
             ]
         );
-
+        $user = User::where('email', $req->email)->first();
+        if($user)
+        {
+            return response()->json(['msg' => "Email is already taken, choose another email", 'color' => "red", 'result' => false]);
+        }
+        
         $us = new User();
         $us->name = $req->name;
         $us->email = $req->email;
@@ -39,7 +45,16 @@ class RegistrationController extends Controller
         $us->type = 'General';
         $us->status = 1;
         $us->emailVerified = 0;
-        $us->save();
+        if($us->save())
+        {
+            // redirect()->route('send.mail', ["userId" => $us->id, "email" => $us->email]);
+            $mailCon = new MailController;
+            $mailCon->sendMail($us->id, $us->email);
+            return response()->json(['msg' => "Registration successfull, Please verify email to login", 'color' => "green", 'result' => true]);
+            
+        }
+        return response()->json(['msg' => "Registartion failed", 'color' => "red", 'result' => false]);
+        
         $profile=new Profile();
         $profile->fk_users_id=$us->id;
         $profile->save();
@@ -54,11 +69,10 @@ class RegistrationController extends Controller
 
     public function registrationGoogleSubmit(Request $user)
     {
-        $findUser = User::where('google_id', $user->id)->first();
+        $findUser = User::where('google_id', $user->googleId)->first();
         if($findUser)
         {
-            Session::flash('message', 'You are already registered!, Please login');
-            return redirect()->route('login');
+            return response()->json(['msg' => "Email already taken, choose another email", 'color' => "red", 'result' => false]);
         }
         else
         {
@@ -68,10 +82,14 @@ class RegistrationController extends Controller
             $newUser->type = 'General';
             $newUser->status = 1;
             $newUser->emailVerified = 0;
-            $newUser->google_id = $user->id;
-            $newUser->google_token = $user->token;
-            $newUser->save();
-
+            $newUser->google_id = $user->googleId;
+            if($newUser->save())
+            {
+                $mailCon = new MailController;
+                $mailCon->sendMail($newUser->id, $newUser->email);
+                return response()->json(['msg' => "Registration successful!, Please login", 'color' => "green", 'result' => true]);
+            }
+            return response()->json(['msg' => "Registration failed!", 'color' => "red", 'result' => false]);
             $profile=new Profile();
             $profile->fk_users_id = $newUser->id;
             $profile->save();
